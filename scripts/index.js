@@ -123,14 +123,6 @@ function initSwiper() {
       autoHeight: true,
       observer: true,
       observeParents: true,
-      updateOnImagesReady: true,
-      preloadImages: false,
-      watchSlidesProgress: true,
-      lazy: {
-        loadPrevNext: true,
-        loadPrevNextAmount: 2,
-        loadOnTransitionStart: true
-      },
       navigation: {
         prevEl: element.querySelector('.swiper-button-prev'),
         nextEl: element.querySelector('.swiper-button-next'),
