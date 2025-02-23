@@ -286,4 +286,8 @@ window.addEventListener('load', () => {
   window.addEventListener('resize', () => {
     ScrollManager.scrollbars.forEach(scrollbar => scrollbar.update());
   });
+
+  setTimeout(() => {
+    document.body.dataset.loading = 'false';
+  }, 500);
 });
