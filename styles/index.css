@@ -238,7 +238,8 @@ sup {
 
   --point-00: #51B3DA;
   --point-01: light-dark(#e46000, #F46C00);
-  --point-02: light-dark(#33aB06, #43EB26);
+  --point-02: light-dark(#398000, #43C000);
+  --point-03: light-dark(#8C7400, #D5B600);
 }
 
 body[data-theme='dark'] {
@@ -375,6 +376,7 @@ h2 { /* 회사 이름 */
   padding: 8px 10px;
   border-radius: 5px;
   font-size: 20px;
+  letter-spacing: 1px;
   color: var(--grey-10);
   background-color: color-mix(in srgb, var(--grey-00) 70%, transparent);
   transition: all 0.2s;
@@ -395,7 +397,7 @@ section .content .project {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-bottom: 100px;
+  padding-bottom: 200px;
 }
 section .content .project .header {
   display: flex;
@@ -404,20 +406,22 @@ section .content .project .header {
   gap: 5px 10px;
 }
 h3 { /* 프로젝트 이름 */
-  font-size: 20px;
+  font-size: 30px;
   font-weight: 600;
   color: var(--point-00);
   transition: all 0.2s;
 }
 section .content .project .header .date {
-  font-size: 12px;
+  position: relative;
+  top: 5px;
+  font-size: 14px;
   font-weight: 200;
   color: var(--grey-12);
   transition: all 0.2s;
 }
 section .content .project .description {
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 16px;
+  line-height: 24px;
   color: var(--grey-12);
   transition: all 0.2s;
 }
@@ -440,9 +444,8 @@ section .content .project .tags {
   gap: 5px;
 }
 section .content .project .tags .item {
-  padding: 3px 5px;
-  font-size: 10px;
-  font-weight: 600;
+  padding: 3px 7px 4px;
+  font-size: 12px;
   color: var(--grey-14);
   background-color: var(--grey-07);
   border-radius: 3px;
@@ -452,7 +455,7 @@ section .content .project .tags .item.work {
   color: var(--grey-01);
   background-color: var(--point-01);
 }
-section .content .project .tags .item.skill {
+section .content .project .tags .item.spec {
   color: var(--grey-01);
   background-color: var(--point-02);
 }
@@ -462,8 +465,8 @@ section .content .project .links {
   gap: 5px;
 }
 section .content .project .links .item .link {
-  font-size: 12px;
-  color: var(--grey-10);
+  font-size: 14px;
+  color: var(--point-03);
   text-decoration: underline;
   transition: all 0.2s;
 }
@@ -496,6 +499,30 @@ section .content .project .links .item .link:hover {
 }
 .swiper .swiper-slide .image {
   width: 100%;
+}
+.swiper .swiper-slide .video-wrap {
+  position: relative;
+}
+.swiper .swiper-slide .video-wrap:before {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  transition: all 0.2s;
+  content: '';
+}
+.swiper .swiper-slide .video-wrap:after {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 100px;
+  height: 100px;
+  color: #fff;
+  background: url('/images/play.svg') no-repeat center;
+  transition: all 0.2s;
+  content: '';
+}
+.swiper .swiper-slide .video-wrap:hover:before, .swiper .swiper-slide .video-wrap:hover:after {
+  opacity: 0;
 }
 .swiper .swiper-slide .video {
   width: 100%;
