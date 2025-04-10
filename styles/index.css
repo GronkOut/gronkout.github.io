@@ -517,7 +517,7 @@ section .content .project .links .item .link:hover {
   width: 100px;
   height: 100px;
   color: #fff;
-  background: url('/images/play.svg') no-repeat center;
+  background: url('/images/play.svg') no-repeat center/cover;
   transition: all 0.2s;
   content: '';
 }
