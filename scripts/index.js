@@ -120,7 +120,7 @@ function initSwiper() {
 
     new Swiper(element, {
       slidesPerView: 'auto',
-      autoHeight: true,
+      autoHeight: false,
       observer: true,
       observeParents: true,
       navigation: {
