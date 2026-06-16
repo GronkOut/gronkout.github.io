@@ -318,7 +318,7 @@ function initPhotoViewer() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initPage() {
   prepareSections();
   initMenu();
   initThemeManager();
@@ -329,4 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initPhotoViewer();
 
   document.body.dataset.loading = 'false';
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPage, { once: true });
+} else {
+  initPage();
+}
