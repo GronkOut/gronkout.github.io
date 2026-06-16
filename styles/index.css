@@ -503,13 +503,13 @@ main > section .content .project .tags .item {
 }
 main > section .content .project .tags .item.work {
   color: var(--work);
-  border-color: color-mix(in srgb, var(--work) 42%, var(--page-line));
-  background-color: var(--work-soft);
+  border-color: color-mix(in srgb, color-mix(in srgb, var(--work) 42%, var(--page-line)) 20%, var(--page-surface));
+  background-color: color-mix(in srgb, var(--work-soft) 20%, var(--page-surface));
 }
 main > section .content .project .tags .item.spec {
   color: var(--spec);
-  border-color: color-mix(in srgb, var(--spec) 38%, var(--page-line));
-  background-color: var(--spec-soft);
+  border-color: color-mix(in srgb, color-mix(in srgb, var(--spec) 38%, var(--page-line)) 20%, var(--page-surface));
+  background-color: color-mix(in srgb, var(--spec-soft) 20%, var(--page-surface));
 }
 main > section .content .project .links {
   order: 5;
@@ -905,5 +905,3 @@ body[data-menu='open'] .menu-panel {
     box-shadow: 0 12px 28px color-mix(in srgb, #000 14%, transparent);
   }
 }
-
-
