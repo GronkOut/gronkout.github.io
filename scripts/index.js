@@ -1,293 +1,332 @@
-const ScrollManager = {
+const layoutState = {
   sections: [],
-  scrollbars: [],
-  currentSection: 0,
-  touchStartY: 0,
-  isTransitioning: false,
+  projects: [],
+  companyButtons: [],
+  projectButtons: [],
 };
 
-function initLazyLoad() {
-  const element = document.querySelectorAll('img[data-src], video[data-src]');
+function getPreferredTheme() {
+  const savedTheme = localStorage.getItem('theme');
 
-  const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const element = entry.target;
+  if (savedTheme === 'dark' || savedTheme === 'light') {
+    return savedTheme;
+  }
 
-        if (element.tagName === 'IMG') {
-          element.src = element.dataset.src;
-        } else if (element.tagName === 'VIDEO') {
-          element.src = element.dataset.src;
-          element.load();
-        }
-
-        element.removeAttribute('data-src');
-        observer.unobserve(element);
-      }
-    });
-  }, { rootMargin: '100px', threshold: 0.1 });
-
-  element.forEach(el => observer.observe(el));
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-function initSmoothScrollbar() {
-  Scrollbar.use(OverscrollPlugin);
+function setTheme(theme) {
+  document.body.dataset.theme = theme;
+  localStorage.setItem('theme', theme);
+}
 
-  ScrollManager.sections.forEach((section) => {
-    const content = section.querySelector('.content');
-    const scrollbar = Scrollbar.init(content, {
-      damping: 0.1,
-      delegateTo: content,
-      alwaysShowTracks: true,
-      plugins: {
-        overscroll: {
-          effect: 'bounce',
-          damping: 0.15,
-          maxOverscroll: 150
-        }
-      }
-    });
+function toggleTheme() {
+  setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
+}
 
-    ScrollManager.scrollbars.push(scrollbar);
+function initThemeManager(root = document) {
+  setTheme(getPreferredTheme());
 
-    scrollbar.track.xAxis.element.remove();
+  root.querySelectorAll('.theme').forEach((button) => {
+    button.addEventListener('click', toggleTheme);
   });
 }
 
-function updateVideoPlayback() {
-  ScrollManager.sections.forEach((section, index) => {
-    const video = section.querySelector('.background .video');
+function initLazyLoad() {
+  const targets = document.querySelectorAll('img[data-src], video[data-src]');
 
-    if (!video) return;
+  if (!targets.length) return;
 
-    video.playbackRate = 0.8;
+  const observer = new IntersectionObserver((entries, observerInstance) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
 
-    if (index === ScrollManager.currentSection) {
-      if (video.readyState >= 3) {
-        video.play().catch(e => console.log('Video play failed:', e));
-      } else {
-        video.addEventListener('canplay', function playOnceLoaded() {
-          video.play().catch(e => console.log('Video play failed:', e));
-          video.removeEventListener('canplay', playOnceLoaded);
-        });
+      const element = entry.target;
+
+      element.src = element.dataset.src;
+
+      if (element.tagName === 'VIDEO') {
+        element.load();
       }
-    } else {
-      video.pause();
+
+      element.removeAttribute('data-src');
+      observerInstance.unobserve(element);
+    });
+  }, { rootMargin: '160px', threshold: 0.01 });
+
+  targets.forEach((element) => observer.observe(element));
+}
+
+function prepareSections() {
+  layoutState.sections = Array.from(document.querySelectorAll('main > section'));
+  layoutState.projects = [];
+
+  layoutState.sections.forEach((section, index) => {
+    const title = section.querySelector('h2');
+
+    if (!section.id) {
+      section.id = `company-${index + 1}`;
+    }
+
+    section.dataset.companyName = title?.textContent.trim() || `Company ${index + 1}`;
+
+    section.querySelectorAll('.project').forEach((project, projectIndex) => {
+      const projectTitle = project.querySelector('h3');
+      const projectDate = project.querySelector('.date');
+
+      if (!project.id) {
+        project.id = `${section.id}-project-${projectIndex + 1}`;
+      }
+
+      project.dataset.companyId = section.id;
+      project.dataset.projectName = projectTitle?.textContent.trim() || `Project ${projectIndex + 1}`;
+      project.dataset.projectDate = projectDate?.textContent.trim() || '';
+      layoutState.projects.push(project);
+    });
+  });
+}
+
+function scrollToTarget(target) {
+  const header = document.querySelector('#header');
+  const offset = (header?.offsetHeight || 0) + 24;
+  const top = target.getBoundingClientRect().top + window.scrollY - offset;
+
+  window.scrollTo({
+    top: Math.max(0, top),
+    behavior: 'smooth',
+  });
+}
+
+function createNavButton(target, { depth, label, kind, title }) {
+  const button = document.createElement('button');
+
+  button.className = `item depth-${depth}`;
+  button.type = 'button';
+  button.textContent = label;
+  button.dataset.target = target.id;
+  button.dataset.kind = kind;
+
+  if (title) {
+    button.title = title;
+  }
+
+  button.addEventListener('click', () => {
+    closeMenu();
+    scrollToTarget(target);
+  });
+
+  return button;
+}
+
+function initCompanyNav() {
+  const desktopNav = document.createElement('nav');
+
+  desktopNav.className = 'company-nav';
+  desktopNav.setAttribute('aria-label', '회사 목록');
+
+  const mobileList = document.querySelector('.menu-panel .company-list');
+
+  layoutState.sections.forEach((section) => {
+    const desktopButton = createNavButton(section, {
+      depth: 1,
+      label: section.dataset.companyName,
+      kind: 'company',
+    });
+    const mobileButton = createNavButton(section, {
+      depth: 1,
+      label: section.dataset.companyName,
+      kind: 'company',
+    });
+
+    desktopNav.appendChild(desktopButton);
+    mobileList?.appendChild(mobileButton);
+
+    layoutState.companyButtons.push(desktopButton, mobileButton);
+
+    layoutState.projects
+      .filter((project) => project.dataset.companyId === section.id)
+      .forEach((project) => {
+        const desktopProjectButton = createNavButton(project, {
+          depth: 2,
+          label: project.dataset.projectName,
+          kind: 'project',
+          title: project.dataset.projectDate,
+        });
+        const mobileProjectButton = createNavButton(project, {
+          depth: 2,
+          label: project.dataset.projectName,
+          kind: 'project',
+          title: project.dataset.projectDate,
+        });
+
+        desktopNav.appendChild(desktopProjectButton);
+        mobileList?.appendChild(mobileProjectButton);
+
+        layoutState.projectButtons.push(desktopProjectButton, mobileProjectButton);
+      });
+  });
+
+  document.body.appendChild(desktopNav);
+}
+
+function createMenuPanel() {
+  const panel = document.createElement('div');
+
+  panel.className = 'menu-panel';
+  panel.setAttribute('aria-hidden', 'true');
+  panel.innerHTML = `
+    <div class="menu-header">
+      <button class="theme" type="button" title="테마 변경">테마</button>
+      <button class="menu-close" type="button" aria-label="회사 목록 닫기"></button>
+    </div>
+    <nav class="company-list" aria-label="회사 목록"></nav>
+  `;
+
+  document.body.appendChild(panel);
+
+  return panel;
+}
+
+function openMenu() {
+  const panel = document.querySelector('.menu-panel');
+  const menuButton = document.querySelector('#header .menu-toggle');
+  const closeButton = panel?.querySelector('.menu-close');
+
+  document.body.dataset.menu = 'open';
+  panel?.setAttribute('aria-hidden', 'false');
+  menuButton?.setAttribute('aria-expanded', 'true');
+  closeButton?.focus();
+}
+
+function closeMenu() {
+  const panel = document.querySelector('.menu-panel');
+  const menuButton = document.querySelector('#header .menu-toggle');
+
+  document.body.dataset.menu = 'closed';
+  panel?.setAttribute('aria-hidden', 'true');
+  menuButton?.setAttribute('aria-expanded', 'false');
+}
+
+function initMenu() {
+  const panel = createMenuPanel();
+  const menuButton = document.querySelector('#header .menu-toggle');
+  const closeButton = panel.querySelector('.menu-close');
+
+  menuButton?.addEventListener('click', openMenu);
+  closeButton?.addEventListener('click', closeMenu);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeMenu();
     }
   });
 }
 
-function updateSectionsPosition() {
-  ScrollManager.sections.forEach((section, i) => {
-    section.style.transform = `translateY(${(i - ScrollManager.currentSection) * 100}%)`;
-  });
-}
+function initActiveCompanyObserver() {
+  if (!layoutState.sections.length) return;
 
-function scrollToSection(index) {
-  if (ScrollManager.currentSection === index || ScrollManager.isTransitioning) return;
+  let ticking = false;
+  const getDocumentTop = (element) => element.getBoundingClientRect().top + window.scrollY;
 
-  ScrollManager.isTransitioning = true;
-  ScrollManager.currentSection = index;
+  const setActiveSection = () => {
+    const header = document.querySelector('#header');
+    const offset = (header?.offsetHeight || 0) + 24;
+    const anchor = window.scrollY + offset + 1;
+    const activeSection = layoutState.sections.reduce((current, section) => {
+      return getDocumentTop(section) <= anchor ? section : current;
+    }, layoutState.sections[0]);
+    const sectionProjects = layoutState.projects.filter((project) => project.dataset.companyId === activeSection.id);
+    const activeProject = sectionProjects.reduce((current, project) => {
+      return getDocumentTop(project) <= anchor ? project : current;
+    }, sectionProjects[0]);
+    const activeId = activeSection.id;
+    const activeProjectId = activeProject?.id;
 
-  updateSectionsPosition();
-
-  setTimeout(() => {
-    ScrollManager.isTransitioning = false;
-
-    updateVideoPlayback();
-  }, 500);
-}
-
-function initThemeManager() {
-  if (localStorage.getItem('theme')) {
-    document.body.dataset.theme = localStorage.getItem('theme');
-  } else {
-    document.body.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-
-  document.querySelector('#header .theme').addEventListener('click', () => {
-    const theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
-
-    document.body.dataset.theme = theme;
-
-    localStorage.setItem('theme', theme);
-  });
-}
-
-function initSwiper() {
-  document.querySelectorAll('.swiper').forEach((element) => {
-    const firstVideo = element.querySelector('.swiper-slide video');
-
-    new Swiper(element, {
-      slidesPerView: 'auto',
-      autoHeight: false,
-      observer: true,
-      observeParents: true,
-      navigation: {
-        prevEl: element.querySelector('.swiper-button-prev'),
-        nextEl: element.querySelector('.swiper-button-next'),
-      },
-      pagination: {
-        el: element.querySelector('.swiper-pagination'),
-      },
-      on: {
-        init: (swiperInstance) => {
-          if (firstVideo) {
-            firstVideo.addEventListener('loadedmetadata', () => {
-              swiperInstance.update();
-            });
-          }
-        },
-      },
+    layoutState.companyButtons.forEach((button) => {
+      button.classList.toggle('is-active', button.dataset.target === activeId);
     });
+    layoutState.projectButtons.forEach((button) => {
+      button.classList.toggle('is-active', button.dataset.target === activeProjectId);
+    });
+
+    ticking = false;
+  };
+
+  const requestActiveUpdate = () => {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(setActiveSection);
+  };
+
+  setActiveSection();
+  window.addEventListener('scroll', requestActiveUpdate, { passive: true });
+  window.addEventListener('resize', requestActiveUpdate);
+  window.addEventListener('load', requestActiveUpdate);
+}
+
+function initVideoInteraction() {
+  document.querySelectorAll('.media-gallery .video').forEach((video) => {
+    video.controls = true;
+    video.preload = 'metadata';
   });
 }
 
 function initPhotoViewer() {
-  document.querySelectorAll('.swiper').forEach((element) => {
+  if (!window.PhotoSwipeLightbox || !window.PhotoSwipe) return;
+
+  document.querySelectorAll('.media-gallery').forEach((gallery) => {
+    const itemCount = gallery.querySelectorAll('.media-link').length;
     const lightbox = new PhotoSwipeLightbox({
-      gallery: element,
-      children: '.image',
+      gallery,
+      children: '.media-link',
       pswpModule: window.PhotoSwipe,
+      appendToEl: document.body,
+      mainClass: itemCount <= 1 ? 'pswp--single-item' : '',
       showHideAnimationType: 'zoom',
-      imageClickAction: 'toggle-controls',
-      padding: { top: 40, bottom: 40, left: 40, right: 40 },
-      zoom: false,
-      loop: false,
+      initialZoomLevel: ({ elementSize, panAreaSize }) => Math.min(1, panAreaSize.x / elementSize.x),
+      secondaryZoomLevel: 1,
+      maxZoomLevel: 4,
+      imageClickAction: 'zoom',
+      tapAction: 'toggle-controls',
+      doubleTapAction: 'zoom',
       wheelToZoom: true,
       closeOnVerticalDrag: false,
+      loop: false,
+      padding: { top: 0, bottom: 0, left: 0, right: 0 },
+    });
+
+    lightbox.on('initialZoomPan', ({ slide }) => {
+      slide.pan.y = 0;
     });
 
     lightbox.addFilter('itemData', (itemData) => {
-      const { src, naturalWidth, naturalHeight, alt } = itemData.element;
+      const link = itemData.element;
+      const image = link.querySelector('img');
+      const width = image?.naturalWidth || 1600;
+      const height = image?.naturalHeight || 1000;
 
-      return { ...itemData, src, width: naturalWidth || 1200, height: naturalHeight || 900, alt: alt || '' };
+      return {
+        ...itemData,
+        src: link.getAttribute('href'),
+        width,
+        height,
+        alt: image?.alt || '',
+      };
     });
 
     lightbox.init();
   });
 }
 
-function initVideoInteraction() {
-  document.querySelectorAll('.swiper .video').forEach((element) => {
-    element.addEventListener('mouseenter', () => {
-      element.playbackRate = 2;
-      element.play();
-    });
-
-    element.addEventListener('mouseleave', () => {
-      element.pause();
-    });
-
-    element.addEventListener('click', () => {
-      window.open(element.getAttribute('src'), '_blank');
-    });
-  });
-}
-
-function initProgressBar() {
-  const progressBar = document.querySelector('#footer .progress');
-
-  function updateProgressBar() {
-    const totalSections = ScrollManager.sections.length;
-    const currentScrollbar = ScrollManager.scrollbars[ScrollManager.currentSection];
-    const { offset, limit } = currentScrollbar;
-
-    let sectionProgress = 0;
-
-    if (limit.y > 0) {
-      sectionProgress = offset.y / limit.y;
-    }
-
-    const totalProgress = (ScrollManager.currentSection + sectionProgress) / totalSections;
-
-    progressBar.style.width = `${totalProgress * 100}%`;
-  }
-
-  updateProgressBar();
-
-  ScrollManager.scrollbars.forEach((scrollbar) => {
-    scrollbar.addListener(updateProgressBar);
-  });
-
-  const originalScrollToSection = scrollToSection;
-
-  scrollToSection = function(index) {
-    originalScrollToSection(index);
-
-    setTimeout(updateProgressBar, 500);
-  };
-}
-
-window.addEventListener('load', () => {
-  ScrollManager.sections = document.querySelectorAll('section');
-
-  initLazyLoad();
-
-  initSmoothScrollbar();
-
-  updateSectionsPosition();
-  updateVideoPlayback();
-
+document.addEventListener('DOMContentLoaded', () => {
+  prepareSections();
+  initMenu();
   initThemeManager();
-  initSwiper();
-  initPhotoViewer();
+  initCompanyNav();
+  initActiveCompanyObserver();
+  initLazyLoad();
   initVideoInteraction();
-  initProgressBar();
+  initPhotoViewer();
 
-  window.addEventListener('wheel', (event) => {
-    if (ScrollManager.isTransitioning) return;
-
-    const currentScrollbar = ScrollManager.scrollbars[ScrollManager.currentSection];
-    const { offset, limit } = currentScrollbar;
-    const isScrollingDown = event.deltaY > 0;
-
-    const isAtEdge = isScrollingDown ? offset.y >= limit.y - 2 : offset.y <= 2;
-
-    if (isAtEdge) {
-      const targetSection = isScrollingDown ? ScrollManager.currentSection + 1 : ScrollManager.currentSection - 1;
-
-      if (targetSection >= 0 && targetSection < ScrollManager.sections.length) {
-        event.preventDefault();
-
-        scrollToSection(targetSection);
-      }
-    }
-  }, { passive: false });
-
-  window.addEventListener('touchstart', (event) => {
-    if (!ScrollManager.isTransitioning) {
-      ScrollManager.touchStartY = event.touches[0].clientY;
-    }
-  });
-
-  window.addEventListener('touchend', (event) => {
-    if (ScrollManager.isTransitioning) return;
-
-    const touchEndY = event.changedTouches[0].clientY;
-    const delta = ScrollManager.touchStartY - touchEndY;
-
-    if (Math.abs(delta) <= 50) return;
-
-    const isScrollingDown = delta > 0;
-    const currentScrollbar = ScrollManager.scrollbars[ScrollManager.currentSection];
-    const { offset, limit } = currentScrollbar;
-    const isAtEdge = isScrollingDown ? offset.y >= limit.y - 2 : offset.y <= 2;
-
-    if (isAtEdge) {
-      const targetSection = isScrollingDown ? ScrollManager.currentSection + 1 : ScrollManager.currentSection - 1;
-
-      if (targetSection >= 0 && targetSection < ScrollManager.sections.length) {
-        scrollToSection(targetSection);
-      }
-    }
-  });
-
-  window.addEventListener('resize', () => {
-    ScrollManager.scrollbars.forEach(scrollbar => scrollbar.update());
-  });
-
-  setTimeout(() => {
-    document.body.dataset.loading = 'false';
-  }, 500);
+  document.body.dataset.loading = 'false';
 });
