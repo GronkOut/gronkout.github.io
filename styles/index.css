@@ -150,7 +150,7 @@ sup {
   font-display: swap;
   src:
     local('Pretendard Black'),
-    url('/fonts/Pretendard-Black.woff2') format('woff2');
+    url('../fonts/Pretendard-Black.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Pretendard';
@@ -158,7 +158,7 @@ sup {
   font-display: swap;
   src:
     local('Pretendard ExtraBold'),
-    url('/fonts/Pretendard-ExtraBold.woff2') format('woff2');
+    url('../fonts/Pretendard-ExtraBold.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Pretendard';
@@ -166,7 +166,7 @@ sup {
   font-display: swap;
   src:
     local('Pretendard Bold'),
-    url('/fonts/Pretendard-Bold.woff2') format('woff2');
+    url('../fonts/Pretendard-Bold.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Pretendard';
@@ -174,7 +174,7 @@ sup {
   font-display: swap;
   src:
     local('Pretendard SemiBold'),
-    url('/fonts/Pretendard-SemiBold.woff2') format('woff2');
+    url('../fonts/Pretendard-SemiBold.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Pretendard';
@@ -182,7 +182,7 @@ sup {
   font-display: swap;
   src:
     local('Pretendard Medium'),
-    url('/fonts/Pretendard-Medium.woff2') format('woff2');
+    url('../fonts/Pretendard-Medium.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Pretendard';
@@ -190,7 +190,7 @@ sup {
   font-display: swap;
   src:
     local('Pretendard Regular'),
-    url('/fonts/Pretendard-Regular.woff2') format('woff2');
+    url('../fonts/Pretendard-Regular.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Pretendard';
@@ -198,7 +198,7 @@ sup {
   font-display: swap;
   src:
     local('Pretendard Light'),
-    url('/fonts/Pretendard-Light.woff2') format('woff2');
+    url('../fonts/Pretendard-Light.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Pretendard';
@@ -206,7 +206,7 @@ sup {
   font-display: swap;
   src:
     local('Pretendard ExtraLight'),
-    url('/fonts/Pretendard-ExtraLight.woff2') format('woff2');
+    url('../fonts/Pretendard-ExtraLight.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Pretendard';
@@ -214,11 +214,13 @@ sup {
   font-display: swap;
   src:
     local('Pretendard Thin'),
-    url('/fonts/Pretendard-Thin.woff2') format('woff2');
+    url('../fonts/Pretendard-Thin.woff2') format('woff2');
 }
 
 /* Variables */
 :root {
+  --loader-bg: #fff;
+  --loader-fg: #000;
   --grey-00: light-dark(#fff, #000);
   --grey-01: light-dark(#eee, #111);
   --grey-02: light-dark(#ddd, #222);
@@ -242,19 +244,31 @@ sup {
   --point-03: light-dark(#8C7400, #D5B600);
 }
 
+:root[data-theme='dark'],
 body[data-theme='dark'] {
   color-scheme: dark;
+  --loader-bg: #000;
+  --loader-fg: #fff;
   --theme-icon: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBMaWNlbnNlOiBNSVQuIE1hZGUgYnkgVHdpdHRlcjogaHR0cHM6Ly9naXRodWIuY29tL3R3aXR0ZXIvdHdlbW9qaSAtLT4KPHN2ZyB3aWR0aD0iODAwcHgiIGhlaWdodD0iODAwcHgiIHZpZXdCb3g9IjAgMCAzNiAzNiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgYXJpYS1oaWRkZW49InRydWUiIHJvbGU9ImltZyIgY2xhc3M9Imljb25pZnkgaWNvbmlmeS0tdHdlbW9qaSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+PHBhdGggZmlsbD0iIzUxQjNEQSIgZD0iTTE2IDJzMC0yIDItMnMyIDIgMiAydjJzMCAyLTIgMnMtMi0yLTItMlYyem0xOCAxNHMyIDAgMiAycy0yIDItMiAyaC0ycy0yIDAtMi0yczItMiAyLTJoMnpNNCAxNnMyIDAgMiAycy0yIDItMiAySDJzLTIgMC0yLTJzMi0yIDItMmgyem01LjEyMS04LjcwN3MxLjQxNCAxLjQxNCAwIDIuODI4cy0yLjgyOCAwLTIuODI4IDBMNC44NzggOC43MDhzLTEuNDE0LTEuNDE0IDAtMi44MjljMS40MTUtMS40MTQgMi44MjkgMCAyLjgyOSAwbDEuNDE0IDEuNDE0em0yMSAyMXMxLjQxNCAxLjQxNCAwIDIuODI4cy0yLjgyOCAwLTIuODI4IDBsLTEuNDE0LTEuNDE0cy0xLjQxNC0xLjQxNCAwLTIuODI4czIuODI4IDAgMi44MjggMGwxLjQxNCAxLjQxNHptLS40MTMtMTguMTcycy0xLjQxNCAxLjQxNC0yLjgyOCAwczAtMi44MjggMC0yLjgyOGwxLjQxNC0xLjQxNHMxLjQxNC0xLjQxNCAyLjgyOCAwczAgMi44MjggMCAyLjgyOGwtMS40MTQgMS40MTR6bS0yMSAyMXMtMS40MTQgMS40MTQtMi44MjggMHMwLTIuODI4IDAtMi44MjhsMS40MTQtMS40MTRzMS40MTQtMS40MTQgMi44MjggMHMwIDIuODI4IDAgMi44MjhsLTEuNDE0IDEuNDE0ek0xNiAzMnMwLTIgMi0yczIgMiAyIDJ2MnMwIDItMiAycy0yLTItMi0ydi0yeiI+PC9wYXRoPjxjaXJjbGUgZmlsbD0iI0ZGREE3OSIgY3g9IjE4IiBjeT0iMTgiIHI9IjEwIj48L2NpcmNsZT48L3N2Zz4=');
 }
+:root[data-theme='light'],
 body[data-theme='light'] {
   color-scheme: light;
+  --loader-bg: #fff;
+  --loader-fg: #000;
   --theme-icon: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBMaWNlbnNlOiBQRC4gTWFkZSBieSBNYXJ5IEFrdmVvOiBodHRwczovL21hcnlha3Zlby5jb20vIC0tPgo8c3ZnIHdpZHRoPSI4MDBweCIgaGVpZ2h0PSI4MDBweCIgdmlld0JveD0iMCAwIDIwIDIwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxnIGlkPSJtb29uIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMiAtMikiPgogICAgPHBhdGggaWQ9InNlY29uZGFyeSIgZmlsbD0iIzUxQjNEQSIgZD0iTTEyLDNhOSw5LDAsMSwwLDksOUE5LDksMCwwLDAsMTIsM1pNOSwxNGEyLDIsMCwxLDEsMi0yQTIsMiwwLDAsMSw5LDE0WiIvPgogICAgPGNpcmNsZSBpZD0icHJpbWFyeSIgY3g9IjIiIGN5PSIyIiByPSIyIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg3IDEwKSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPGxpbmUgaWQ9InByaW1hcnktdXBzdHJva2UiIHgyPSIwLjEiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE2LjQ1IDEzLjUpIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMDAwMDAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8cGF0aCBpZD0icHJpbWFyeS0yIiBkYXRhLW5hbWU9InByaW1hcnkiIGQ9Ik0yMSwxMmE5LDksMCwxLDEtOS05QTksOSwwLDAsMSwyMSwxMloiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2Utd2lkdGg9IjEiLz4KICA8L2c+Cjwvc3ZnPg==');
+}
+:root[data-theme='dark'] body {
+  color-scheme: dark;
+}
+:root[data-theme='light'] body {
+  color-scheme: light;
 }
 body[data-loading='true']:before {
   z-index: 5000;
   position: fixed;
   inset: 0;
-  background-color: var(--grey-00);
+  background-color: var(--loader-bg);
   content: '';
 }
 body[data-loading='true']:after {
@@ -263,8 +277,8 @@ body[data-loading='true']:after {
   inset: 0;
   margin: auto;
   display: inline-block;
-  border: 4px solid var(--grey-15);
-  border-left-color: var(--grey-00);
+  border: 4px solid var(--loader-fg);
+  border-left-color: var(--loader-bg);
   border-radius: 50%;
   width: 30px;
   height: 30px;
@@ -554,6 +568,7 @@ main > section .content .project > h4 {
   margin: 0;
 }
 .media-link {
+  position: relative;
   display: block;
   width: 100%;
   overflow: hidden;
@@ -565,21 +580,29 @@ main > section .content .project > h4 {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .media-link:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
-  outline-offset: 4px;
+  outline: 0;
 }
 .media-item .image,
 .media-item .video {
   box-sizing: border-box;
   display: block;
   width: 100%;
+  opacity: 1;
   object-fit: cover;
   object-position: top center;
   border: 1px solid var(--page-line);
   border-radius: 8px;
   background-color: var(--page-surface);
   box-shadow: 0 18px 42px color-mix(in srgb, #000 13%, transparent);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  transition: opacity 0.82s ease 0.18s, border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.media-item .image[data-src],
+.media-item .video[data-src] {
+  opacity: 0;
+}
+.media-item .image[data-media-loaded='true'],
+.media-item .video[data-media-loaded='true'] {
+  opacity: 1;
 }
 .media-item .image {
   height: auto;
@@ -588,16 +611,38 @@ main > section .content .project > h4 {
   border-radius: 0;
   box-shadow: none;
 }
+.media-link:has(.image[data-src]),
+.media-item:has(> .video[data-src]) {
+  position: relative;
+}
+.media-link:has(.image[data-src]):after,
+.media-item:has(> .video[data-src]):after {
+  z-index: 1;
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--loader-fg);
+  border-left-color: var(--loader-bg);
+  border-radius: 50%;
+  opacity: 1;
+  animation: spinning 0.5s linear infinite;
+  transition: opacity 0.22s ease;
+  content: '';
+  pointer-events: none;
+}
+.media-link:has(.image[data-media-loaded='true']):after,
+.media-item:has(> .video[data-media-loaded='true']):after {
+  opacity: 0;
+}
 .media-item .video {
   max-height: min(78vh, 820px);
   object-fit: contain;
 }
 .media-gallery.large-image-type.compact .video {
   max-height: 620px;
-}
-.media-link:hover {
-  border-color: color-mix(in srgb, var(--accent) 56%, var(--page-line));
-  box-shadow: 0 22px 54px color-mix(in srgb, #000 18%, transparent);
 }
 .media-gallery.large-image-type .media-link {
   height: 400px;

@@ -4,6 +4,7 @@ const layoutState = {
   companyButtons: [],
   projectButtons: [],
 };
+let backgroundMediaTimer = 0;
 
 function getPreferredTheme() {
   const savedTheme = localStorage.getItem('theme');
@@ -16,6 +17,7 @@ function getPreferredTheme() {
 }
 
 function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
   document.body.dataset.theme = theme;
   localStorage.setItem('theme', theme);
 }
@@ -37,24 +39,131 @@ function initLazyLoad() {
 
   if (!targets.length) return;
 
+  const loadTarget = (element) => {
+    loadDeferredMedia(element, 'nearby');
+  };
+
   const observer = new IntersectionObserver((entries, observerInstance) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
 
-      const element = entry.target;
-
-      element.src = element.dataset.src;
-
-      if (element.tagName === 'VIDEO') {
-        element.load();
-      }
-
-      element.removeAttribute('data-src');
-      observerInstance.unobserve(element);
+      loadTarget(entry.target);
+      observerInstance.unobserve(entry.target);
     });
-  }, { rootMargin: '160px', threshold: 0.01 });
+  }, { rootMargin: '720px 0px', threshold: 0.01 });
 
   targets.forEach((element) => observer.observe(element));
+}
+
+function requestIdleTask(callback, timeout = 800) {
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(callback, { timeout });
+    return;
+  }
+
+  window.setTimeout(() => callback({ didTimeout: true, timeRemaining: () => 16 }), 0);
+}
+
+function runAfterLoad(callback) {
+  const run = () => window.setTimeout(() => requestIdleTask(callback), 700);
+
+  if (document.readyState === 'complete') {
+    run();
+    return;
+  }
+
+  window.addEventListener('load', run, { once: true });
+}
+
+function loadDeferredMedia(element, mode = 'nearby') {
+  const source = element.dataset.src;
+
+  if (!source) return Promise.resolve();
+
+  if (element.dataset.loadingMedia === 'true') return Promise.resolve();
+
+  let isFinished = false;
+  const finishLoading = () => {
+    if (isFinished) return;
+
+    isFinished = true;
+    element.dataset.mediaLoaded = 'true';
+
+    window.setTimeout(() => {
+      element.removeAttribute('data-src');
+      element.removeAttribute('data-loading-media');
+    }, 1150);
+  };
+
+  element.dataset.loadingMedia = 'true';
+
+  if (element.tagName === 'IMG') {
+    element.loading = 'eager';
+    element.decoding = 'async';
+    element.fetchPriority = mode === 'background' ? 'low' : 'auto';
+    element.src = source;
+
+    if (typeof element.decode === 'function') {
+      return element.decode().catch(() => {}).finally(finishLoading);
+    }
+
+    return new Promise((resolve) => {
+      const done = () => {
+        finishLoading();
+        resolve();
+      };
+
+      element.addEventListener('load', done, { once: true });
+      element.addEventListener('error', done, { once: true });
+    });
+  }
+
+  if (element.tagName === 'VIDEO') {
+    element.preload = mode === 'background' ? 'auto' : 'metadata';
+
+    return new Promise((resolve) => {
+      const done = () => {
+        window.clearTimeout(timeoutId);
+        finishLoading();
+        resolve();
+      };
+      const timeoutId = window.setTimeout(done, mode === 'background' ? 2600 : 900);
+
+      element.addEventListener('loadedmetadata', done, { once: true });
+      element.addEventListener('error', done, { once: true });
+      element.src = source;
+      element.load();
+    });
+  }
+
+  return Promise.resolve();
+}
+
+function initBackgroundMediaLoading() {
+  const getQueue = () => Array.from(document.querySelectorAll('img[data-src]:not([data-loading-media]), video[data-src]:not([data-loading-media])'));
+
+  const scheduleDrain = (delay = 0) => {
+    window.clearTimeout(backgroundMediaTimer);
+    backgroundMediaTimer = window.setTimeout(drainQueue, delay);
+  };
+
+  const drainQueue = () => {
+    const next = getQueue()[0];
+
+    if (!next) return;
+
+    requestIdleTask(() => {
+      const current = getQueue()[0];
+
+      if (!current) return;
+
+      loadDeferredMedia(current, 'background').finally(() => {
+        scheduleDrain(current.tagName === 'VIDEO' ? 700 : 90);
+      });
+    });
+  };
+
+  runAfterLoad(() => scheduleDrain());
 }
 
 function prepareSections() {
@@ -368,7 +477,7 @@ function initPhotoViewer() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   prepareSections();
   initMenu();
   initThemeManager();
@@ -376,7 +485,17 @@ document.addEventListener('DOMContentLoaded', () => {
   initActiveCompanyObserver();
   initLazyLoad();
   initVideoInteraction();
-  initPhotoViewer();
 
   document.body.dataset.loading = 'false';
-});
+
+  runAfterLoad(() => {
+    initPhotoViewer();
+    initBackgroundMediaLoading();
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
