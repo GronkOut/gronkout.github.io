@@ -424,10 +424,108 @@ function initActiveCompanyObserver() {
 }
 
 function initVideoInteraction() {
-  document.querySelectorAll('.media-gallery .video').forEach((video) => {
+  const videos = Array.from(document.querySelectorAll('.media-gallery .video'));
+
+  if (!videos.length) return;
+
+  const playRatio = 2 / 3;
+  const fastScrollSpeed = 2.4;
+  const scrollSettleDelay = 180;
+  let lastScrollY = window.scrollY;
+  let lastScrollTime = performance.now();
+  let isFastScrolling = false;
+  let scrollSettleTimer = 0;
+  let ticking = false;
+
+  const getVisibleRatio = (video) => {
+    const rect = video.getBoundingClientRect();
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const visibleTop = Math.max(rect.top, 0);
+    const visibleBottom = Math.min(rect.bottom, viewportHeight);
+    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+    if (rect.height <= 0 || rect.bottom <= 0 || rect.top >= viewportHeight) {
+      return 0;
+    }
+
+    return visibleHeight / rect.height;
+  };
+
+  const playVideo = (video) => {
+    if (!video.paused) return;
+
+    const loadPromise = video.dataset.src ? loadDeferredMedia(video, 'nearby') : Promise.resolve();
+
+    loadPromise.then(() => {
+      if (isFastScrolling || getVisibleRatio(video) < playRatio) return;
+
+      video.play().catch(() => {});
+    });
+  };
+
+  const syncVideoPlayback = () => {
+    if (isFastScrolling) {
+      ticking = false;
+      return;
+    }
+
+    videos.forEach((video) => {
+      const visibleRatio = getVisibleRatio(video);
+
+      if (visibleRatio >= playRatio) {
+        playVideo(video);
+      } else if (visibleRatio === 0 && !video.paused) {
+        video.pause();
+      }
+    });
+
+    ticking = false;
+  };
+
+  const requestPlaybackSync = () => {
+    if (ticking) return;
+
+    ticking = true;
+    window.requestAnimationFrame(syncVideoPlayback);
+  };
+
+  const updateScrollSpeed = () => {
+    const now = performance.now();
+    const elapsed = Math.max(1, now - lastScrollTime);
+    const distance = Math.abs(window.scrollY - lastScrollY);
+
+    isFastScrolling = distance / elapsed > fastScrollSpeed;
+    lastScrollY = window.scrollY;
+    lastScrollTime = now;
+
+    window.clearTimeout(scrollSettleTimer);
+    scrollSettleTimer = window.setTimeout(() => {
+      isFastScrolling = false;
+      requestPlaybackSync();
+    }, scrollSettleDelay);
+
+    requestPlaybackSync();
+  };
+
+  videos.forEach((video) => {
     video.controls = true;
+    video.playsInline = true;
     video.preload = 'metadata';
   });
+
+  window.addEventListener('scroll', updateScrollSpeed, { passive: true });
+  window.addEventListener('resize', requestPlaybackSync);
+  window.addEventListener('load', requestPlaybackSync);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      videos.forEach((video) => video.pause());
+      return;
+    }
+
+    requestPlaybackSync();
+  });
+
+  requestPlaybackSync();
 }
 
 function initPhotoViewer() {
